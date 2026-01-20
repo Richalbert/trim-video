@@ -6,7 +6,8 @@ from typing import Optional
 
 def trim(
     in_file: str,
-    out_file: str,
+    out_video: str,
+    out_audio: str,
     start: float,
     end: float,
     overwrite: bool = True,
@@ -17,7 +18,8 @@ def trim(
 
     Args:
         in_file: Chemin du fichier vidéo source
-        out_file: Chemin du fichier de sortie
+        out_video: Chemin du fichier de sortie pour la video
+        out_audio: Chemin du fichier de sortie pour l'audio
         start: Temps de début en secondes
         end: Temps de fin en secondes
         overwrite: Si True, écrase le fichier de sortie s'il existe
@@ -55,14 +57,23 @@ def trim(
     except ffmpeg.Error as e:
         raise RuntimeError(f"Erreur lors de l'analyse du fichier : {e.stderr.decode()}")
 
-    # Gestion du fichier de sortie
-    if os.path.exists(out_file):
+    # Gestion du fichier de sortie video
+    if os.path.exists(out_video):
         if overwrite:
-            os.remove(out_file)
+            os.remove(out_video)
             if verbose:
-                print(f"Fichier {out_file} existant supprimé")
+                print(f"Fichier {out_video} existant supprimé")
         else:
-            raise FileExistsError(f"Le fichier {out_file} existe déjà")
+            raise FileExistsError(f"Le fichier {out_video} existe déjà")
+
+    # Gestion du fichier de sortie audio
+    if os.path.exists(out_audio):
+        if overwrite:
+            os.remove(out_audio)
+            if verbose:
+                print(f"Fichier {out_audio} existant supprimé")
+        else:
+            raise FileExistsError(f"Le fichier {out_audio} existe déjà")
 
     # Traitement
     try:
@@ -74,12 +85,17 @@ def trim(
             "asetpts", pts
         )
 
-        # Pas besoin de concat, on passe directement video et audio
-        output = ffmpeg.output(video, audio, out_file, format="mp4")
-        output.run(capture_stdout=not verbose, capture_stderr=not verbose)
+        # Traitement de la video
+        output_video = ffmpeg.output(video, audio, out_video, format="mp4")
+        output_video.run(capture_stdout=not verbose, capture_stderr=not verbose)
+
+        # Traitement de l'audio
+        output_audio = ffmpeg.output(audio, out_audio, format="mp3")
+        output_audio.run(capture_stdout=not verbose, capture_stderr=not verbose)
 
         if verbose:
-            print(f"✓ Vidéo découpée avec succès : {out_file}")
+            print(f"✓ Vidéo découpée avec succès : {out_video}")
+            print(f"✓ Audio extrait avec succès → {out_audio}")
             print(f"  Segment extrait : {start}s → {end}s ({end - start}s)")
 
     except ffmpeg.Error as e:
@@ -89,6 +105,13 @@ def trim(
 if __name__ == "__main__":
     # Exemple d'utilisation
     try:
-        trim(in_file="movie.mp4", out_file="out.mp4", start=536, end=629, verbose=True)
+        trim(
+            in_file="movie.mp4",
+            out_video="out.mp4",
+            out_audio="out.mp3",
+            start=16,
+            end=155,
+            verbose=True,
+        )
     except Exception as e:
         print(f"Erreur : {e}")
