@@ -95,7 +95,7 @@ def trim(
 
         if verbose:
             print(f"✓ Vidéo découpée avec succès : {out_video}")
-            print(f"✓ Audio extrait avec succès → {out_audio}")
+            print(f"✓ Audio extrait avec succès : {out_audio}")
             print(f"  Segment extrait : {start}s → {end}s ({end - start}s)")
 
     except ffmpeg.Error as e:
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             out_video="out.mp4",
             out_audio="out.mp3",
             start=16,
-            end=155,
+            end=116,
             verbose=True,
         )
     except Exception as e:
